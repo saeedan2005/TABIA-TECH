@@ -1,42 +1,27 @@
-# تعبئة تك — TABIA TECH
+تصحيح فشل بناء TABIA TECH على GitHub Actions (Windows 7 x86)
 
-برنامج مكتبي عربي يعمل محلياً لإدارة المواد الخام والمشتريات وأوامر الإنتاج وأجور العمال والتقارير باستخدام **SQLite** و **Tkinter**.
+السبب المؤكد من سجل التشغيل 40948379963:
+  sqlite3.OperationalError: unknown function: json_valid()
 
-## البناء الآلي لمثبّت Windows 7 SP1 بنواة 32 بت
+SQLite 3.35.5 في Python 3.8.10 x86 لا يتيح json_valid() تلقائياً،
+بينما تحتوي قاعدة المشروع على CHECK(json_valid(...)).
+كان محرك البرنامج يسجل الدالة على اتصاله الرئيسي فقط، وليس على اتصالات
+النسخ الاحتياطي والاستعادة. واستخدم الاختبار اتصالاً خاماً إضافياً.
 
-بعد رفع هذه الملفات إلى GitHub في فرع `main`، يبدأ سير عمل **Build TABIA TECH - Win7 x86 Installer** تلقائياً عندما يتغير كود البرنامج. يمكن تشغيله يدوياً من تبويب **Actions → Build TABIA TECH - Win7 x86 Installer → Run workflow**.
+التغييرات في الملفات الثلاثة المرفقة:
+- TABIA_TECH_engine.py: إضافة connect_sqlite() التي تسجل json_valid()
+  لكل اتصال، واستعمالها لعمليات النسخ الاحتياطي والتحقق والاستعادة.
+- إغلاق اتصالات النسخ بدقة مع contextlib.closing، لحل قفل الملفات WinError 32.
+- TABIA_TECH_integration_tests.py: فحص النسخة باتصال متوافق ومغلق.
+- TABIA_TECH_desktop.py: إصلاح استعادة قاعدة البيانات من واجهة البرنامج،
+  باستعمال الاتصال المتوافق وإغلاق جميع الملفات.
 
-عند نجاح البناء، افتح آخر تشغيل ناجح ثم **Artifacts → TABIA_TECH_Setup_Win7_x86**، ونزّل الأرشيف الذي يحتوي على الملف:
+تعليمات الرفع:
+1. افتح المستودع https://github.com/saeedan2005/TABIA-TECH
+2. استبدل الملفات الثلاثة الموجودة في جذر المستودع بالملفات المناظرة في الأرشيف.
+   لا تغيّر TABIA_TECH_schema.sql أو ملف قاعدة البيانات ولا ملف Workflow.
+3. افتح Actions وتحقق من المهمة الجديدة بعد Commit إلى main.
+4. إذا نجحت المهمة، حمل TABIA_TECH_Setup_Win7_x86 من Artifacts.
 
-`TABIA_TECH_Setup_Win7_x86.exe`
-
-هذا الملف ليس مُرفقاً بالمستودع قبل نجاح GitHub Actions. يحتاج حساب GitHub إلى السماح بتشغيل Actions، وقد يحتاج إلى مراجعة صلاحيات تشغيل مهام البناء.
-
-### محتويات المشروع
-
-- `TABIA_TECH_desktop.py`: الواجهات العربية (Tkinter).
-- `TABIA_TECH_engine.py`: محرك SQLite ومعاملات الإنتاج والمشتريات والعمال.
-- `TABIA_TECH_schema.sql`: تعريف الجداول والفهارس والتقارير.
-- `TABIA_TECH.db`: قاعدة **أولية تجريبية بلا سجلات عملاء أو مشتريات أو إنتاج فعلية**.
-- `build_win7_x86.ps1`: بناء برنامج Windows 32-bit والمثبّت.
-- `TABIA_TECH_Win7_x86.iss`: إعداد Inno Setup.
-- `.github/workflows/build-win7-32bit.yml`: مهمة GitHub Actions.
-- `TABIA_TECH_integration_tests.py`, `TABIA_TECH_ui_smoke_tests.py`: الاختبارات.
-
-### التشغيل من المصدر
-
-يحتاج Python 3.8 مع Tkinter:
-
-```bash
-python TABIA_TECH_desktop.py
-```
-
-### خصوصية البيانات
-
-هذه النسخة لا ترسل بيانات المصنع عبر الإنترنت. تحفظ بيانات التشغيل على جهاز Windows في `%LOCALAPPDATA%\TABIA_TECH`. **لا ترفع قاعدة البيانات المستخدمة بالفعل إلى مستودع GitHub عام**، ولا تضع بيانات تجارية أو كلمات مرور أو مفاتيح API في Git.
-
-### التوافق والتنبيه
-
-المستهدف: **Windows 7 SP1 (32-bit x86)**. عملية البناء تتم بواسطة runner حديث Windows x64 مع Python x86. **لم يتم تأكيد تشغيل البرنامج على جهاز Windows 7 فعلي**؛ يلزم اختبار المثبّت قبل استخدامه لإدارة بيانات حقيقية. ويندوز 7 خارج الدعم الأمني.
-
-للتفاصيل راجع `README_WIN7_32bit_AR.txt`.
+ملاحظة: اختبارات Linux المحلية لا تعادل اختبار GitHub Windows x86؛
+ولم يثبت بعد التشغيل على Windows 7 فعلي.
