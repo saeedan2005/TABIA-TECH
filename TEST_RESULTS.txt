@@ -1,0 +1,18 @@
+TABIA TECH Win7 x86 Build Kit -- validation record
+Date: 2026-10-29
+Platform used for validation: Debian Linux x86_64, Python 3.13.5, SQLite 3.46.1
+
+PASSED: Python source parsed using Python 3.8 grammar (engine and desktop).
+PASSED: SQLite compatibility schema generated without STRICT across 27 tables.
+PASSED: SQLite integrity_check on newly seeded database.
+PASSED: 38/38 engine integration tests using compatible schema.
+PASSED: 9/9 graphical screen smoke tests (Tk under Xvfb).
+PASSED: 10/10 report smoke tests.
+PASSED: Reference example / package costs.
+PASSED: Edit dialogs, report exports, restore backup and live database integrity.
+PASSED: invalid JSON CHECK rejected via locally registered json_valid.
+
+NOT BUILT: The real Windows PE32 executable and Inno Setup installer.
+NOT VERIFIED: 32-bit Windows 7 SP1 runtime, Microsoft CRT and Tcl/Tk behavior on target.
+The provided build scripts and GitHub Actions workflow are meant to produce
+installer_output/TABIA_TECH_Setup_Win7_x86.exe on a Windows build runner.

@@ -1,0 +1,29 @@
+# Python / packaging
+__pycache__/
+*.py[cod]
+.pytest_cache/
+build/
+dist/
+*.spec
+installer_output/
+*.log
+
+# Local user database and backups are NEVER included in Git
+*.db
+!TABIA_TECH.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+data/
+backups/
+exports/
+
+# OS + editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

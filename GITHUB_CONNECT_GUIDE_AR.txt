@@ -1,0 +1,36 @@
+رفع المشروع وبناء ملف التثبيت من GitHub
+======================================
+
+المستودع الذي ظهر في البحث: https://github.com/saeedan2005/TABIA-TECH
+تحقق من أنه مستودعك قبل الرفع. لم نتمكن من رفع الملفات من المحادثة لأن صلاحيات GitHub الحالية للقراءة فقط.
+
+أولاً: امنح ChatGPT صلاحية الوصول للمستودع
+1) في GitHub افتح Settings -> Applications -> Installed GitHub Apps.
+2) افتح إعدادات تطبيق الربط مع ChatGPT / GitHub الموجود بحسابك.
+3) في Repository access امنحه الوصول إلى TABIA-TECH (إن كنت تستخدم Selected repositories).
+4) ارجع إلى محادثة ChatGPT واطلب إعادة محاولة الرفع.
+
+أو: ارفع الملفات بنفسك بالـ Git
+1) فك ضغط هذه الحزمة في مجلد.
+2) افتح Git Bash داخل المجلد، ثم نفذ (بعد التأكد من اسم الحساب):
+   git init
+   git branch -M main
+   git add .
+   git commit -m "Initial TABIA TECH Win7 x86 desktop build"
+   git remote add origin https://github.com/saeedan2005/TABIA-TECH.git
+   git push -u origin main
+3) أكمل تسجيل الدخول إلى GitHub عند الطلب. لا ترسل رموز الدخول إلى أي شخص.
+
+عند نجاح الرفع:
+- افتح المستودع ثم تبويب Actions.
+- ستظهر مهمة Build TABIA TECH - Win7 x86 Installer تلقائياً بعد push في فرع main.
+- إذا لم تبدأ، افتح المهمة واختر Run workflow.
+- بعد اكتمالها بنجاح، افتح Artifacts وحمل TABIA_TECH_Setup_Win7_x86.
+- افتح ZIP الناتج وستجد TABIA_TECH_Setup_Win7_x86.exe.
+
+أخطاء شائعة:
+- صلاحية push مفقودة: تأكد أن المستودع بحسابك أو أن لديك صلاحية كتابة.
+- Workflow failed: افتح Log لكل خطوة، ولا تعتبر EXE جاهزاً إلا بعد ظهور Success.
+- Windows 7: اختبار التشغيل على الجهاز الأصلي ضروري؛ قد يتطلب تحديثات UCRT أو Visual C++.
+
+لا ترفع ملفات قاعدة بيانات المستخدم الحقيقية إلى مستودع عام.
