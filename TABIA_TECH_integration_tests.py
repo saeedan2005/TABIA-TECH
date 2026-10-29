@@ -2,8 +2,9 @@
 import sqlite3
 import tempfile
 from pathlib import Path
+from contextlib import closing
 from decimal import Decimal as D
-from TABIA_TECH_engine import TabiaDB, micro, money_text
+from TABIA_TECH_engine import TabiaDB, micro, money_text, connect_sqlite
 
 passed=[]
 def check(name, ok):
@@ -115,7 +116,9 @@ with tempfile.TemporaryDirectory() as td:
     check('Final integrity and foreign keys',db.db.execute('PRAGMA integrity_check').fetchone()[0]=='ok' and db.db.execute('PRAGMA foreign_key_check').fetchall()==[])
     # Backup API snapshot and check files.
     backup=db.backup(Path(td)/'backups')
-    check('Verified SQLite backup',Path(backup).is_file() and sqlite3.connect(backup).execute('PRAGMA integrity_check').fetchone()[0]=='ok')
+    with closing(connect_sqlite(backup)) as check_backup:
+        backup_ok = check_backup.execute('PRAGMA integrity_check').fetchone()[0]=='ok'
+    check('Verified SQLite backup',Path(backup).is_file() and backup_ok)
     check('Actual backup restoration test',db.test_restore(backup) and db.one('SELECT restore_test_at_utc FROM backup_registry WHERE backup_path=?',(backup,))[0] is not None)
     for i in range(11):db.backup(Path(td)/'backups')
     check('Only ten backup files retained',len(list((Path(td)/'backups').glob('*.db')))==10 and db.db.execute('SELECT COUNT(*) FROM backup_registry').fetchone()[0]==10)
