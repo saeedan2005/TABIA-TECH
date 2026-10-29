@@ -1,18 +1,71 @@
-TABIA TECH Win7 x86 Build Kit -- validation record
-Date: 2026-10-29
-Platform used for validation: Debian Linux x86_64, Python 3.13.5, SQLite 3.46.1
+PASS 01  SQLite schema 27 tables / 10 reports
+PASS 02  Integrity & foreign keys
+PASS 03  Exactly three material units
+PASS 04  Purchase stock 25kg, price 7885/kg
+PASS 05  Duplicate purchase save blocked
+PASS 06  Draft does not deduct inventory or accrue wages
+PASS 07  Reference costs 197125 raw + 3300 wages = 200425
+PASS 08  Reference per-pack price 7955/4007.50/2036.25
+PASS 09  Zero balance, no negative shortage
+PASS 10  Cleaning 1500 => total 201925; wages kept frozen
+PASS 11  Cleaning by weight: 8015, 4037.50, 2051.25
+PASS 12  Exact line total and cent reconciliation
+PASS 13  Edit does not duplicate warehouse or wages
+PASS 14  Spent invoice price edit prohibited
+PASS 15  Overpayment permitted, negative balance -700
+PASS 16  Cancellation restores stock, reverse earned only; payment persists
+PASS 17  Cancelled production no longer allocated FIFO
+PASS 18  40kg taken from 25kg => -15kg and outstanding shortage
+PASS 19  Later purchase closes shortage and leaves 15kg
+PASS 20  Old invoice qty adjustment restores correct  -5kg difference
+PASS 21  FIFO reallocated 5kg older + 30kg newer; remaining shortage 5kg
+PASS 22  Historical production price never revalued by FIFO edits
+PASS 23  Changing older unused invoice leaves latest price unchanged
+PASS 24  Changing newest unused invoice updates current price
+PASS 25  Editing units preserves old purchase quantity and historical factor
+PASS 26  Revising old invoice uses frozen conversion factor, not new factor
+PASS 27  Failed edit lacking original fee snapshot rolls back atomically
+PASS 28  Opening balances may be negative; only one opening per worker
+PASS 29  Worker adjustment changes ledger, not production expense
+PASS 30  Foreign purchase exchange rate snapshot preserved
+PASS 31  Immutable inventory journal rejects physical updates
+PASS 32  Immutable production version rejects physical deletes
+PASS 33  FK prevents orphan material units
+PASS 34  One local currency enforcement
+PASS 35  Final integrity and foreign keys
+PASS 36  Verified SQLite backup
+PASS 37  Actual backup restoration test
+PASS 38  Only ten backup files retained
 
-PASSED: Python source parsed using Python 3.8 grammar (engine and desktop).
-PASSED: SQLite compatibility schema generated without STRICT across 27 tables.
-PASSED: SQLite integrity_check on newly seeded database.
-PASSED: 38/38 engine integration tests using compatible schema.
-PASSED: 9/9 graphical screen smoke tests (Tk under Xvfb).
-PASSED: 10/10 report smoke tests.
-PASSED: Reference example / package costs.
-PASSED: Edit dialogs, report exports, restore backup and live database integrity.
-PASSED: invalid JSON CHECK rejected via locally registered json_valid.
-
-NOT BUILT: The real Windows PE32 executable and Inno Setup installer.
-NOT VERIFIED: 32-bit Windows 7 SP1 runtime, Microsoft CRT and Tcl/Tk behavior on target.
-The provided build scripts and GitHub Actions workflow are meant to produce
-installer_output/TABIA_TECH_Setup_Win7_x86.exe on a Windows build runner.
+RESULT: 38 / 38 SQLite integration tests passed.
+PASS PAGE: dashboard
+PASS PAGE: materials
+PASS PAGE: purchases
+PASS PAGE: production
+PASS PAGE: workers
+PASS PAGE: inventory
+PASS PAGE: reports
+PASS PAGE: settings
+PASS PAGE: audit
+PASS REPORT: تكاليف أوامر الإنتاج - 1 rows
+PASS REPORT: تكلفة العبوات حسب الوزن - 3 rows
+PASS REPORT: المخزون وتقييم آخر شراء - 1 rows
+PASS REPORT: فواتير المشتريات - 1 rows
+PASS REPORT: الفاقد والتنبيهات - 1 rows
+PASS REPORT: أرصدة العمال - 1 rows
+PASS REPORT: كشف حساب عامل - 4 rows
+PASS REPORT: العجز المؤقت FIFO - 0 rows
+PASS REPORT: دفعات الشراء FIFO - 1 rows
+PASS REPORT: تاريخ أسعار الخام - 1 rows
+PASS reference cost / 3 package costs
+PASS DB integrity
+PASS DIALOG: edit material
+PASS DIALOG: edit unit
+PASS DIALOG: edit purchase
+PASS DIALOG: edit posted order
+PASS DIALOG: order cost details
+PASS DIALOG: edit worker
+PASS DIALOG: worker adjustment
+PASS exports: Excel-compatible CSV and printable HTML/PDF
+PASS UI restore backup
+ALL UI SMOKE TESTS PASSED
