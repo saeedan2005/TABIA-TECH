@@ -1,0 +1,48 @@
+name: Build TABIA TECH - Win7 x86 Installer
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "*.py"
+      - "*.sql"
+      - "*.db"
+      - "*.ps1"
+      - "*.iss"
+      - "*.cmd"
+      - ".github/workflows/build-win7-32bit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-win32-installer:
+    name: Build and test 32-bit Windows installer
+    runs-on: windows-2022
+    timeout-minutes: 35
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Configure Python 3.8.10 x86
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8.10'
+          architecture: x86
+
+      - name: Install Inno Setup
+        shell: powershell
+        run: choco install innosetup --yes --no-progress
+
+      - name: Test, build, and verify EXE installer
+        shell: powershell
+        run: .\build_win7_x86.ps1
+
+      - name: Upload downloadable setup
+        uses: actions/upload-artifact@v4
+        with:
+          name: TABIA_TECH_Setup_Win7_x86
+          path: installer_output/TABIA_TECH_Setup_Win7_x86.exe
+          if-no-files-found: error
+          retention-days: 30
