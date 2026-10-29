@@ -6,7 +6,7 @@ Service-level operations enforce cross-row invariants that SQLite CHECK cannot.
 """
 from __future__ import annotations
 from collections import defaultdict, deque
-from contextlib import contextmanager
+from contextlib import contextmanager, closing
 from datetime import datetime, timezone, date
 from decimal import Decimal, ROUND_HALF_UP, ROUND_FLOOR, getcontext
 import hashlib
@@ -41,6 +41,26 @@ def money_text(x):
 def j(x):
     return json.dumps(x,ensure_ascii=False,sort_keys=True,default=str)
 
+
+def connect_sqlite(path, **kwargs):
+    """Open a SQLite connection with the JSON-validation function the schema needs.
+
+    Python 3.8 x86 on Windows 7 can ship SQLite 3.35.5 without JSON1. Its
+    integrity_check evaluates CHECK(json_valid(...)), so ALL connections,
+    including backup verification and restore testing, need this function.
+    """
+    connection = sqlite3.connect(str(path), **kwargs)
+
+    def _json_valid(value):
+        try:
+            json.loads(value)
+            return 1
+        except (TypeError, ValueError):
+            return 0
+
+    connection.create_function('json_valid', 1, _json_valid)
+    return connection
+
 def split_amount(total, weights):
     """Apportion integer micro-amount exactly using largest remainders."""
     if not weights or sum(weights)<=0: raise ValueError('Missing output weight')
@@ -63,17 +83,8 @@ def reconcile_cents(line_micro):
 class TabiaDB:
     def __init__(self, path):
         self.path = str(path)
-        self.db = sqlite3.connect(self.path, isolation_level=None,timeout=15)
+        self.db = connect_sqlite(self.path, isolation_level=None, timeout=15)
         self.db.row_factory = sqlite3.Row
-        # Python 3.8 x86 for Windows 7 may ship SQLite without JSON1.
-        # Register json_valid locally to preserve JSON CHECK constraints.
-        def _json_valid(value):
-            try:
-                json.loads(value)
-                return 1
-            except (TypeError, ValueError):
-                return 0
-        self.db.create_function('json_valid', 1, _json_valid)
         self.db.execute('PRAGMA foreign_keys=ON')
         self.db.execute('PRAGMA busy_timeout=15000')
         if self.path != ':memory:': self.db.execute('PRAGMA journal_mode=WAL')
@@ -582,16 +593,14 @@ class TabiaDB:
         import tempfile
         with tempfile.TemporaryDirectory() as td:
             target=Path(td)/'restored.db'
-            src=sqlite3.connect(str(backup_path))
-            try:
-                with sqlite3.connect(str(target)) as restored:
+            # closing() closes the file handle (sqlite3's own context manager
+            # only commits/rolls back and does NOT close the connection).
+            with closing(connect_sqlite(backup_path)) as src:
+                with closing(connect_sqlite(target)) as restored:
                     src.backup(restored)
-                check=sqlite3.connect(str(target))
-                try:
+                with closing(connect_sqlite(target)) as check:
                     ok=check.execute('PRAGMA integrity_check').fetchone()[0]=='ok'
                     keys=check.execute('PRAGMA foreign_key_check').fetchall()==[]
-                finally:check.close()
-            finally:src.close()
         if ok and keys:
             with self.tx():
                 self.db.execute('UPDATE backup_registry SET restore_test_at_utc=? WHERE backup_path=?',(now(),str(backup_path)))
@@ -602,11 +611,10 @@ class TabiaDB:
         out=Path(backup_dir);out.mkdir(parents=True,exist_ok=True)
         stamp=datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
         dest=out / f'TABIA_TECH_{stamp}.db'
-        with sqlite3.connect(str(dest)) as saved:
+        with closing(connect_sqlite(dest)) as saved:
             self.db.backup(saved)
-        check=sqlite3.connect(str(dest))
-        try:ok=check.execute('PRAGMA integrity_check').fetchone()[0]
-        finally:check.close()
+        with closing(connect_sqlite(dest)) as check:
+            ok=check.execute('PRAGMA integrity_check').fetchone()[0]
         if ok!='ok':
             dest.unlink(missing_ok=True)
             raise RuntimeError('Backup integrity_check failed: '+ok)
