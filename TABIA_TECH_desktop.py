@@ -6,6 +6,7 @@ Python 3.8+ on Windows 7 (x86), stdlib only. Run: python TABIA_TECH_desktop.py
 """
 from __future__ import annotations
 import csv
+from contextlib import closing
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 import html
@@ -20,7 +21,7 @@ import tempfile
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import webbrowser
-from TABIA_TECH_engine import TabiaDB, micro, unmicro, dec, money_text
+from TABIA_TECH_engine import TabiaDB, micro, unmicro, dec, money_text, connect_sqlite
 
 # PyInstaller places read-only seed resources in sys._MEIPASS.
 BASE = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parent))
@@ -815,10 +816,10 @@ class TabiaApp:
             fd,tmp=tempfile.mkstemp(prefix='tabia_restore_',suffix='.db',dir=self.db_path.parent)
             import os
             os.close(fd);temp_path=Path(tmp)
-            source=sqlite3.connect(str(path));target=sqlite3.connect(str(temp_path))
-            try:source.backup(target)
-            finally:source.close();target.close()
-            with sqlite3.connect(str(temp_path)) as check:
+            with closing(connect_sqlite(path)) as source:
+                with closing(connect_sqlite(temp_path)) as target:
+                    source.backup(target)
+            with closing(connect_sqlite(temp_path)) as check:
                 if check.execute('PRAGMA integrity_check').fetchone()[0]!='ok':raise ValueError('النسخة تالفة')
                 if check.execute('PRAGMA foreign_key_check').fetchall():raise ValueError('أخطاء علاقات في النسخة')
                 if check.execute('SELECT COUNT(*) FROM schema_migrations').fetchone()[0]==0:raise ValueError('ليست قاعدة تعبئة تك مهيأة')
